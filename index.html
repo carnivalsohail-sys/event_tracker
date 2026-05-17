@@ -14,7 +14,7 @@
     <meta name="application-name" content="Event Tracker">
 
     <!-- PWA: Manifest (inline data URI — no separate file needed) -->
-    <script type="text/javascript" nonce="edc5ec115dfa4885a1a6e99d608" src="//local.adguard.org?ts=1778998926229&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2Fe45aca32-51ec-4b37-a0c3-3dc6a46b1045%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="edc5ec115dfa4885a1a6e99d608" src="//local.adguard.org?ts=1778998926229&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="manifest" id="pwa-manifest">
+    <script type="text/javascript" nonce="edc5ec115dfa4885a1a6e99d608" src="//local.adguard.org?ts=1779007547905&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2F0b77ca5d-3071-4571-8f24-bebb8062602a%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="edc5ec115dfa4885a1a6e99d608" src="//local.adguard.org?ts=1779007547905&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><script type="text/javascript" nonce="edc5ec115dfa4885a1a6e99d608" src="//local.adguard.org?ts=1778998926229&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2Fe45aca32-51ec-4b37-a0c3-3dc6a46b1045%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="edc5ec115dfa4885a1a6e99d608" src="//local.adguard.org?ts=1778998926229&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="manifest" id="pwa-manifest">
 
     <!-- PWA: Apple Touch Icon (generated inline SVG → PNG via canvas) -->
     <link rel="apple-touch-icon" id="apple-touch-icon">
@@ -2058,12 +2058,6 @@ function doPost(e) {
                 </div>
 
                 <div class="toolbar">
-                    <button class="btn btn-small quot-btn" onclick="openQuotationForFirst()" style="flex:1;background:#8B0000;color:#fff;border:none;">
-                        &#128196; QUICK QUOTATION
-                    </button>
-                    <button class="btn btn-small" onclick="openCostSheetForFirst()" style="flex:1;background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;">
-                        &#128200; QUICK COST SHEET
-                    </button>
                     <button class="btn btn-small" onclick="openRateCardEditor()" style="flex:1;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;border:none;">
                         &#128209; RATE CARD
                     </button>
@@ -3027,6 +3021,7 @@ function doPost(e) {
                         '<div class="detail-item"><div class="detail-label">Setup Status</div><div class="detail-value"><select class="inline-select" onchange="quickUpdateField(' + work.id + ', \'setupStatus\', this.value)">' + setupOptions + '</select></div></div>' +
                         '<div class="detail-item"><div class="detail-label">Follow Up</div><div class="detail-value"><select class="inline-select" onchange="quickUpdateField(' + work.id + ', \'followUp\', this.value)">' + followUpOptions + '</select></div></div>' +
                         '<div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><select class="inline-select" onchange="quickUpdateField(' + work.id + ', \'status\', this.value)">' + statusOptions + '</select></div></div>' +
+                        getCostSheetInlineHtml(work) +
                     '</div>' +
 
                     '<div class="detail-item" style="margin-top: 10px;"><div class="detail-label">Materials Required</div><div class="detail-value">' + escapeHtml(work.materials) + '</div></div>' +
@@ -3043,7 +3038,7 @@ function doPost(e) {
                         '<button class="btn btn-primary btn-small" onclick="editWork(' + work.id + ')">Edit</button>' +
                         '<button class="btn btn-small" style="background:#FFB300;color:#000;border:none;" onclick="askBossWhatsApp(' + work.id + ')">Send to Boss</button>' +
                         '<button class="btn btn-small" style="background:#25D366;color:#fff;border:none;" onclick="shareWhatsApp(' + work.id + ')">Share Team</button>' +
-                        '<button class="btn btn-small" style="background:#128C7E;color:#fff;border:none;" onclick="sendDayWorklistForDate(\'' + (work.date || '') + '\')">Day Worklist</button>' +
+                        '<button class="btn btn-small" style="background:#128C7E;color:#fff;border:none;" onclick="showEventSummary(' + work.id + ')">Summary</button>' +
                         '<button class="btn btn-small quot-btn" onclick="openQuotationModal(' + work.id + ')">&#128196; Quotation</button>' +
                         '<button class="btn btn-small" style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;" onclick="openCostSheetModal(' + work.id + ')">&#128200; Cost Sheet</button>' +
                         '<button class="btn btn-secondary btn-small" onclick="duplicateWork(' + work.id + ')">Clone</button>' +
@@ -3611,6 +3606,369 @@ function doPost(e) {
             openTeamSendModal(msg, teamList);
         }
 
+        // ==================== EVENT SUMMARY (per event) ====================
+        function showEventSummary(id) {
+            var work = works.find(function(w) { return w.id == id; });
+            if (!work) return;
+
+            var html = '<div class="modal-overlay" id="eventSummaryModal" onclick="if(event.target===this)this.remove()" style="z-index:30000;">';
+            html += '<div class="modal-box" style="max-width:440px; max-height:85vh; overflow-y:auto; padding:25px;">';
+            html += '<h3 style="font-family:\'Bebas Neue\',cursive;font-size:1.4rem;color:var(--primary);letter-spacing:1px;margin-bottom:15px;">EVENT SUMMARY</h3>';
+
+            // Event info
+            html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:16px;border:1px solid var(--border-color);">';
+            html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">EVENT</div>';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.85rem;">';
+            html += '<div><strong>Client:</strong> ' + escapeHtml(work.client || '-') + '</div>';
+            html += '<div><strong>Date:</strong> ' + formatDate(work.date) + '</div>';
+            html += '<div><strong>Venue:</strong> ' + escapeHtml(work.venue || '-') + '</div>';
+            html += '<div><strong>Location:</strong> ' + escapeHtml(work.location || '-') + '</div>';
+            if (work.time) html += '<div><strong>Time:</strong> ' + escapeHtml(csFormat12hr(work.time)) + '</div>';
+            if (work.eventType) html += '<div><strong>Type:</strong> ' + escapeHtml(work.eventType) + '</div>';
+            if (work.hall) html += '<div><strong>Hall:</strong> ' + escapeHtml(work.hall) + '</div>';
+            if (work.stall) html += '<div><strong>Stall:</strong> ' + escapeHtml(work.stall) + '</div>';
+            html += '</div></div>';
+
+            // Quick stat pills
+            var matCount = 0;
+            if (work.materials) matCount = work.materials.split(',').map(function(m){return m.trim();}).filter(function(m){return m;}).length;
+            var teamCount = 0;
+            if (work.team) teamCount = work.team.split(',').map(function(n){return n.trim();}).filter(function(n){return n;}).length;
+
+            html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">';
+            html += '<div style="background:linear-gradient(135deg,#FF6B00,#FF8F00);color:white;padding:8px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;">Materials: ' + matCount + '</div>';
+            html += '<div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:8px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;">Staff: ' + teamCount + '</div>';
+            if (work.payment) {
+                html += '<div style="background:linear-gradient(135deg,#00C853,#00e676);color:white;padding:8px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;">Payment: ' + escapeHtml(work.payment) + '</div>';
+            }
+            html += '</div>';
+
+            // Team breakdown
+            if (work.team) {
+                var allMembers = getTeamMembers();
+                var teamNames = work.team.split(',').map(function(n){return n.trim();}).filter(function(n){return n;});
+                var ops=0,semi=0,helpers=0,other=0;
+                teamNames.forEach(function(name){
+                    var member = allMembers.find(function(m){return m.name===name;});
+                    if (member) {
+                        var cat = (member.category||'').toUpperCase();
+                        if (cat==='OPERATOR') ops++;
+                        else if (cat==='SEMI OPERATOR'||cat==='SEMI-OPERATOR') semi++;
+                        else if (cat==='HELPER') helpers++;
+                        else other++;
+                    } else { other++; }
+                });
+                html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:16px;border:1px solid var(--border-color);">';
+                html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">TEAM BREAKDOWN</div>';
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.85rem;">';
+                html += '<div>Operators: <strong>' + ops + '</strong></div>';
+                html += '<div>Semi-Op: <strong>' + semi + '</strong></div>';
+                html += '<div>Helpers: <strong>' + helpers + '</strong></div>';
+                if (other > 0) html += '<div>Other: <strong>' + other + '</strong></div>';
+                html += '</div>';
+                html += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-color);font-weight:700;font-size:0.85rem;">Total Staff: ' + teamNames.length + '</div>';
+                html += '</div>';
+            }
+
+            // Materials list
+            if (work.materials) {
+                var materials = work.materials.split(',').map(function(m){return m.trim();}).filter(function(m){return m;});
+                html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:16px;border:1px solid var(--border-color);">';
+                html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">MATERIALS</div>';
+                html += '<div style="font-size:0.82rem;">';
+                materials.forEach(function(m,i){
+                    html += '<div style="padding:3px 0;border-bottom:1px dashed var(--border-color);">' + (i+1) + '. ' + escapeHtml(m) + '</div>';
+                });
+                html += '</div></div>';
+            }
+
+            // Status
+            html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">';
+            html += '<div style="padding:6px 12px;border-radius:6px;font-size:0.78rem;font-weight:700;background:' + (work.setupStatus==='Setup Done'?'#e8f5e9;color:#2e7d32':work.setupStatus==='In Progress'?'#e3f2fd;color:#1565c0':work.setupStatus==='Materials Collected'?'#fff3e0;color:#e65100':'#eee;color:#666') + ';">Setup: ' + (work.setupStatus||'Not Started') + '</div>';
+            html += '<div style="padding:6px 12px;border-radius:6px;font-size:0.78rem;font-weight:700;background:' + (work.followUp==='Completed'?'#e8f5e9;color:#2e7d32':work.followUp==='In Progress'?'#e3f2fd;color:#1565c0':'#fff3e0;color:#e65100') + ';">Follow Up: ' + (work.followUp||'Pending') + '</div>';
+            html += '</div>';
+
+            // Actions
+            html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+            html += '<button class="btn btn-small" style="background:#128C7E;color:#fff;border:none;flex:1;" onclick="sendDayWorklistForDate(\'' + (work.date||'') + '\');document.getElementById(\'eventSummaryModal\').remove();">Day Worklist</button>';
+            html += '<button class="btn btn-secondary btn-small" style="flex:1;" onclick="document.getElementById(\'eventSummaryModal\').remove()">Close</button>';
+            html += '</div>';
+
+            html += '</div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        // ==================== COST SHEET INLINE DISPLAY (in event card) ====================
+        function getCostSheetInlineHtml(work) {
+            var saved = localStorage.getItem('cs_' + work.id);
+            var hasCsData = false;
+            var csTotals = null;
+            var parsedCs = null;
+            if (saved) {
+                try {
+                    parsedCs = JSON.parse(saved);
+                    if (parsedCs && (parsedCs.vendorItems.length > 0 || parsedCs.otherItems.length > 0 || parsedCs.labourSetupEnabled || parsedCs.transportSetupEnabled)) {
+                        hasCsData = true;
+                        csTotals = calcCsTotalsFromData(parsedCs);
+                    }
+                } catch(e) {}
+            }
+
+            var quoted = parseFloat(String(work.payment || '0').replace(/[^0-9.]/g, '')) || 0;
+
+            var html = '<div class="detail-item" style="grid-column:1/-1;border:2px solid #1a237e;background:linear-gradient(135deg,rgba(26,35,126,0.06),rgba(40,53,147,0.03));padding:12px;cursor:pointer;" onclick="showCostSheetQuick(' + work.id + ')">';
+            html += '<div class="detail-label" style="color:#1a237e;margin-bottom:8px;">&#128200; Cost Sheet Details</div>';
+
+            if (hasCsData && csTotals) {
+                var t = csTotals;
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:0.78rem;">';
+
+                if (t.labourTotal > 0) {
+                    html += '<div style="color:var(--text-secondary);">Labour:</div><div style="font-weight:700;">' + t.labourTotal.toLocaleString('en-IN') + '</div>';
+                }
+                if (t.transportTotal > 0) {
+                    html += '<div style="color:var(--text-secondary);">Transport:</div><div style="font-weight:700;">' + t.transportTotal.toLocaleString('en-IN') + '</div>';
+                }
+                if (t.vendorTotal > 0) {
+                    html += '<div style="color:var(--text-secondary);">Vendor:</div><div style="font-weight:700;">' + t.vendorTotal.toLocaleString('en-IN') + '</div>';
+                }
+                if (t.otherTotal > 0) {
+                    html += '<div style="color:var(--text-secondary);">Other:</div><div style="font-weight:700;">' + t.otherTotal.toLocaleString('en-IN') + '</div>';
+                }
+
+                html += '<div style="color:#1a237e;font-weight:700;border-top:1px solid var(--border-color);padding-top:4px;margin-top:2px;">Total Cost:</div>';
+                html += '<div style="color:#1a237e;font-weight:700;border-top:1px solid var(--border-color);padding-top:4px;margin-top:2px;">' + t.totalCost.toLocaleString('en-IN') + '</div>';
+
+                html += '<div style="color:var(--primary);font-weight:700;">My Price (+' + t.profitPct + '%):</div>';
+                html += '<div style="color:var(--primary);font-weight:700;">' + t.myPrice.toLocaleString('en-IN') + '</div>';
+
+                if (quoted > 0) {
+                    var diff = quoted - t.myPrice;
+                    var diffColor = diff >= 0 ? '#2e7d32' : '#D50000';
+                    html += '<div style="color:' + diffColor + ';font-weight:700;">Quoted - My Price:</div>';
+                    html += '<div style="color:' + diffColor + ';font-weight:700;">' + (diff >= 0 ? '+' : '') + diff.toLocaleString('en-IN') + '</div>';
+                }
+
+                html += '</div>';
+            } else {
+                // No cost sheet data — show basic estimate
+                var matCount = 0;
+                if (work.materials) matCount = work.materials.split(',').map(function(m){return m.trim();}).filter(function(m){return m;}).length;
+                var teamCount = 0;
+                if (work.team) teamCount = work.team.split(',').map(function(n){return n.trim();}).filter(function(n){return n;}).length;
+                var ops=0,helpers=0;
+                if (work.team) {
+                    var allM = getTeamMembers();
+                    work.team.split(',').map(function(n){return n.trim();}).filter(function(n){return n;}).forEach(function(name){
+                        var member = allM.find(function(m){return m.name===name;});
+                        if (member) {
+                            var cat = (member.category||'').toUpperCase();
+                            if (cat==='OPERATOR') ops++;
+                            else if (cat==='HELPER') helpers++;
+                        }
+                    });
+                }
+
+                html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:0.78rem;">';
+                html += '<div style="text-align:center;padding:4px;background:var(--input-bg);border-radius:4px;"><div style="font-size:1rem;font-weight:700;color:var(--primary);">' + matCount + '</div><div style="font-size:0.65rem;color:var(--text-secondary);">Mat.</div></div>';
+                html += '<div style="text-align:center;padding:4px;background:var(--input-bg);border-radius:4px;"><div style="font-size:1rem;font-weight:700;color:#667eea;">' + teamCount + '</div><div style="font-size:0.65rem;color:var(--text-secondary);">Staff</div></div>';
+                html += '<div style="text-align:center;padding:4px;background:var(--input-bg);border-radius:4px;"><div style="font-size:1rem;font-weight:700;color:#FF6B00;">' + ops + '</div><div style="font-size:0.65rem;color:var(--text-secondary);">Ops</div></div>';
+                html += '<div style="text-align:center;padding:4px;background:var(--input-bg);border-radius:4px;"><div style="font-size:1rem;font-weight:700;color:#00C853;">' + helpers + '</div><div style="font-size:0.65rem;color:var(--text-secondary);">Helpers</div></div>';
+                html += '</div>';
+
+                if (quoted > 0) {
+                    html += '<div style="margin-top:6px;text-align:center;font-weight:700;color:#00C853;font-size:0.85rem;">Quoted: ' + quoted.toLocaleString('en-IN') + '</div>';
+                }
+
+                html += '<div style="margin-top:6px;text-align:center;font-size:0.72rem;color:var(--text-secondary);">Tap to open Cost Sheet</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        // ==================== COST SHEET QUICK VIEW (in event card) ====================
+        function showCostSheetQuick(id) {
+            var work = works.find(function(w) { return w.id == id; });
+            if (!work) return;
+
+            // Try to load saved cost sheet data for this event
+            var saved = localStorage.getItem('cs_' + id);
+            var hasCsData = false;
+            var csTotals = null;
+            if (saved) {
+                try {
+                    var parsed = JSON.parse(saved);
+                    if (parsed && (parsed.vendorItems.length > 0 || parsed.otherItems.length > 0 || parsed.labourSetupEnabled || parsed.transportSetupEnabled)) {
+                        hasCsData = true;
+                        csTotals = calcCsTotalsFromData(parsed);
+                    }
+                } catch(e) {}
+            }
+
+            var quoted = parseFloat(String(work.payment || '0').replace(/[^0-9.]/g, '')) || 0;
+
+            var html = '<div class="modal-overlay" id="costSheetQuickModal" onclick="if(event.target===this)this.remove()" style="z-index:30000;">';
+            html += '<div class="modal-box" style="max-width:440px; max-height:85vh; overflow-y:auto; padding:25px;">';
+            html += '<h3 style="font-family:\'Bebas Neue\',cursive;font-size:1.4rem;color:var(--primary);letter-spacing:1px;margin-bottom:15px;">&#128200; COST SHEET DETAILS</h3>';
+
+            // Event header
+            html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:16px;border:1px solid var(--border-color);">';
+            html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.85rem;">';
+            html += '<div><strong>Client:</strong> ' + escapeHtml(work.client || '-') + '</div>';
+            html += '<div><strong>Date:</strong> ' + formatDate(work.date) + '</div>';
+            html += '<div><strong>Venue:</strong> ' + escapeHtml(work.venue || '-') + '</div>';
+            html += '<div><strong>Location:</strong> ' + escapeHtml(work.location || '-') + '</div>';
+            if (work.eventType) html += '<div><strong>Type:</strong> ' + escapeHtml(work.eventType) + '</div>';
+            if (work.payment) html += '<div><strong>Quoted:</strong> ' + escapeHtml(work.payment) + '</div>';
+            html += '</div></div>';
+
+            if (hasCsData && csTotals) {
+                // Show actual cost sheet data
+                var t = csTotals;
+
+                // Labour section
+                if (t.labourSetup > 0 || t.labourEvent > 0) {
+                    html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:12px;border:1px solid var(--border-color);">';
+                    html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">LABOUR</div>';
+                    html += '<div style="font-size:0.82rem;">';
+                    if (t.labourSetup > 0) html += '<div style="padding:2px 0;">Setup: ' + t.labourSetup.toLocaleString('en-IN') + '</div>';
+                    if (t.labourEvent > 0) html += '<div style="padding:2px 0;">Event: ' + t.labourEvent.toLocaleString('en-IN') + '</div>';
+                    html += '<div style="padding:2px 0;font-weight:700;border-top:1px solid var(--border-color);">Total Labour: ' + t.labourTotal.toLocaleString('en-IN') + '</div>';
+                    html += '</div></div>';
+                }
+
+                // Transport section
+                if (t.transportSetup > 0 || t.transportEvent > 0) {
+                    html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:12px;border:1px solid var(--border-color);">';
+                    html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">TRANSPORT</div>';
+                    html += '<div style="font-size:0.82rem;">';
+                    if (t.transportSetup > 0) html += '<div style="padding:2px 0;">Setup: ' + t.transportSetup.toLocaleString('en-IN') + '</div>';
+                    if (t.transportEvent > 0) html += '<div style="padding:2px 0;">Event: ' + t.transportEvent.toLocaleString('en-IN') + '</div>';
+                    html += '<div style="padding:2px 0;font-weight:700;border-top:1px solid var(--border-color);">Total Transport: ' + t.transportTotal.toLocaleString('en-IN') + '</div>';
+                    html += '</div></div>';
+                }
+
+                // Vendor items
+                var parsedCs = JSON.parse(saved);
+                if (parsedCs.vendorItems && parsedCs.vendorItems.length > 0) {
+                    html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:12px;border:1px solid var(--border-color);">';
+                    html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">VENDOR ITEMS</div>';
+                    html += '<div style="font-size:0.82rem;">';
+                    parsedCs.vendorItems.forEach(function(item) {
+                        html += '<div style="padding:2px 0;display:flex;justify-content:space-between;"><span>' + escapeHtml(item.name||'Item') + '</span><span>' + (item.amount||0).toLocaleString('en-IN') + '</span></div>';
+                    });
+                    html += '<div style="padding:2px 0;font-weight:700;border-top:1px solid var(--border-color);">Vendor Total: ' + t.vendorTotal.toLocaleString('en-IN') + '</div>';
+                    html += '</div></div>';
+                }
+
+                // Other items
+                if (parsedCs.otherItems && parsedCs.otherItems.length > 0) {
+                    html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:12px;border:1px solid var(--border-color);">';
+                    html += '<div style="font-weight:700;font-size:0.85rem;color:var(--primary);margin-bottom:8px;">OTHER ITEMS</div>';
+                    html += '<div style="font-size:0.82rem;">';
+                    parsedCs.otherItems.forEach(function(item) {
+                        html += '<div style="padding:2px 0;display:flex;justify-content:space-between;"><span>' + escapeHtml(item.name||'Item') + '</span><span>' + (item.amount||0).toLocaleString('en-IN') + '</span></div>';
+                    });
+                    html += '<div style="padding:2px 0;font-weight:700;border-top:1px solid var(--border-color);">Other Total: ' + t.otherTotal.toLocaleString('en-IN') + '</div>';
+                    html += '</div></div>';
+                }
+
+                // Grand totals
+                html += '<div style="background:linear-gradient(135deg,rgba(26,35,126,0.08),rgba(40,53,147,0.04));padding:16px;border-radius:10px;margin-bottom:16px;border:2px solid #1a237e;">';
+                html += '<div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;margin-bottom:6px;"><span>Total Cost:</span><span>' + t.totalCost.toLocaleString('en-IN') + '</span></div>';
+                html += '<div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;margin-bottom:6px;color:var(--primary);"><span>My Price (+' + t.profitPct + '%):</span><span>' + t.myPrice.toLocaleString('en-IN') + '</span></div>';
+                if (quoted > 0) {
+                    var diff = quoted - t.myPrice;
+                    var diffColor = diff >= 0 ? '#2e7d32' : '#D50000';
+                    html += '<div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:' + diffColor + ';"><span>Quoted - My Price:</span><span>' + (diff >= 0 ? '+' : '') + diff.toLocaleString('en-IN') + '</span></div>';
+                }
+                html += '</div>';
+
+            } else {
+                // No saved cost sheet data — show basic estimate
+                html += '<div style="text-align:center;padding:20px;margin-bottom:16px;background:var(--light);border-radius:10px;border:2px dashed var(--border-color);">';
+                html += '<div style="font-size:2rem;margin-bottom:8px;">&#128200;</div>';
+                html += '<div style="font-weight:700;color:var(--text-secondary);font-size:0.9rem;margin-bottom:6px;">No Cost Sheet Created Yet</div>';
+                html += '<div style="font-size:0.82rem;color:var(--text-secondary);">Open the Cost Sheet for this event to add labour, transport, vendor and other costs. The details will appear here for quick reference.</div>';
+                html += '</div>';
+
+                // Show basic info from event data
+                var matCount = 0;
+                if (work.materials) matCount = work.materials.split(',').map(function(m){return m.trim();}).filter(function(m){return m;}).length;
+                var teamCount = 0;
+                if (work.team) teamCount = work.team.split(',').map(function(n){return n.trim();}).filter(function(n){return n;}).length;
+                var ops=0,semi=0,helpers=0;
+                if (work.team) {
+                    var allM = getTeamMembers();
+                    work.team.split(',').map(function(n){return n.trim();}).filter(function(n){return n;}).forEach(function(name){
+                        var member = allM.find(function(m){return m.name===name;});
+                        if (member) {
+                            var cat = (member.category||'').toUpperCase();
+                            if (cat==='OPERATOR') ops++;
+                            else if (cat==='SEMI OPERATOR'||cat==='SEMI-OPERATOR') semi++;
+                            else if (cat==='HELPER') helpers++;
+                        }
+                    });
+                }
+
+                html += '<div style="background:var(--light);padding:14px;border-radius:10px;margin-bottom:16px;border:1px solid var(--border-color);">';
+                html += '<div style="font-weight:700;font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;">ROUGH ESTIMATE</div>';
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;">';
+                html += '<div style="padding:8px;background:var(--input-bg);border-radius:6px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;color:var(--primary);">' + matCount + '</div><div style="font-size:0.72rem;color:var(--text-secondary);">Materials</div></div>';
+                html += '<div style="padding:8px;background:var(--input-bg);border-radius:6px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;color:#667eea;">' + teamCount + '</div><div style="font-size:0.72rem;color:var(--text-secondary);">Staff</div></div>';
+                html += '<div style="padding:8px;background:var(--input-bg);border-radius:6px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;color:#FF6B00;">' + ops + '</div><div style="font-size:0.72rem;color:var(--text-secondary);">Operators</div></div>';
+                html += '<div style="padding:8px;background:var(--input-bg);border-radius:6px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;color:#00C853;">' + helpers + '</div><div style="font-size:0.72rem;color:var(--text-secondary);">Helpers</div></div>';
+                html += '</div>';
+                if (quoted > 0) {
+                    html += '<div style="margin-top:10px;padding-top:10px;border-top:2px solid var(--border-color);text-align:center;font-weight:700;color:#00C853;font-size:1rem;">Quoted: ' + quoted.toLocaleString('en-IN') + '</div>';
+                }
+                html += '</div>';
+            }
+
+            // Action buttons
+            html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+            html += '<button class="btn btn-small" style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border:none;flex:1;" onclick="document.getElementById(\'costSheetQuickModal\').remove();openCostSheetModal(' + work.id + ')">Open Full Cost Sheet</button>';
+            html += '<button class="btn btn-secondary btn-small" style="flex:1;" onclick="document.getElementById(\'costSheetQuickModal\').remove()">Close</button>';
+            html += '</div>';
+
+            html += '</div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        // Helper: calculate cost sheet totals from saved data (without setting global csData)
+        function calcCsTotalsFromData(d) {
+            var labourSetup = d.labourSetupEnabled ? (d.labourSetupBoys * d.labourSetupRate) : 0;
+            var labourEvent = d.labourEventBoys * d.labourEventRate * (d.labourEventDays || 1);
+            var transportSetup = d.transportSetupEnabled ? (d.transportSetupVehicles * d.transportSetupRate) : 0;
+            var transportEvent = d.transportEventVehicles * d.transportEventRate * (d.transportEventDays || 1);
+
+            var vendorTotal = 0;
+            if (d.vendorItems) d.vendorItems.forEach(function(item) { vendorTotal += (item.amount || 0); });
+            var otherTotal = 0;
+            if (d.otherItems) d.otherItems.forEach(function(item) { otherTotal += (item.amount || 0); });
+
+            var labourTotal = labourSetup + labourEvent;
+            var transportTotal = transportSetup + transportEvent;
+            var totalCost = labourTotal + transportTotal + vendorTotal + otherTotal;
+            var profitPct = d.profitPct || 20;
+            var myPrice = Math.round(totalCost * (1 + profitPct / 100));
+
+            return {
+                labourSetup: labourSetup,
+                labourEvent: labourEvent,
+                labourTotal: labourTotal,
+                transportSetup: transportSetup,
+                transportEvent: transportEvent,
+                transportTotal: transportTotal,
+                vendorTotal: vendorTotal,
+                otherTotal: otherTotal,
+                totalCost: totalCost,
+                profitPct: profitPct,
+                myPrice: myPrice
+            };
+        }
+
         // ==================== DAY WORKLIST (WHATSAPP) ====================
         function sendDayWorklist() {
             showDatePickerModal();
@@ -3642,9 +4000,6 @@ function doPost(e) {
             msg += '━━━━━━━━━━━━━━━━━━━━\n\n';
 
             dayEvents.forEach(function(w, i) {
-                // === EVENT DETAILS ===
-                // Date already shown in header — skip individual date to avoid raw time garbage
-                // Time only if available
                 if (w.time && w.time.trim()) {
                     msg += 'Time: ' + escapeHtml(w.time.trim()) + '\n';
                 }
@@ -3652,52 +4007,28 @@ function doPost(e) {
                 msg += 'Location: ' + escapeHtml(w.location) + '\n';
                 msg += 'Venue: ' + escapeHtml(w.venue) + '\n';
 
-                // If event type is SETUP, add it in bold
                 if (w.eventType && w.eventType.toUpperCase() === 'SETUP') {
                     msg += '*EVENT TYPE : SETUP*\n';
                 }
 
-                // Material list
                 msg += 'Material: ' + escapeHtml(w.materials) + '\n';
 
-                // Hall / Stall if available
                 if (w.hall) msg += 'Hall: ' + escapeHtml(w.hall) + '\n';
                 if (w.stall) msg += 'Stall: ' + escapeHtml(w.stall) + '\n';
 
-                // Team members listed with categories
-                if (w.team) {
-                    var teamMembers = getTeamMembers();
-                    var names = w.team.split(',').map(function(n) { return n.trim(); });
-                    var teamDisplay = [];
-                    names.forEach(function(name) {
-                        if (!name) return;
-                        var member = teamMembers.find(function(m) { return m.name === name; });
-                        if (member) {
-                            teamDisplay.push(escapeHtml(member.category + ': ' + member.name));
-                        } else {
-                            teamDisplay.push(escapeHtml(name));
-                        }
-                    });
-                    msg += 'Team: ' + teamDisplay.join(' | ') + '\n';
-                }
-
+                // NO team names — just open WhatsApp, don't change the message
                 // NO payment shown to team members
 
-                // Separator dashes before Client details
                 msg += '---\n';
 
-                // === CLIENT / FOLLOW UP DETAILS ===
                 msg += 'Client : ' + (escapeHtml(w.client) || '-') + '\n';
                 msg += 'Mobile: ' + (escapeHtml(w.contact) || '-') + '\n';
-                // NO amt/payment shown to team members
                 msg += 'Follow up : ' + (escapeHtml(w.followUp) || '-') + '\n';
 
-                // Notes if available
                 if (w.notes) {
                     msg += 'Notes: ' + escapeHtml(w.notes) + '\n';
                 }
 
-                // Blank line between events (except last)
                 if (i < dayEvents.length - 1) {
                     msg += '\n';
                 }
@@ -3706,27 +4037,71 @@ function doPost(e) {
             msg += '\n━━━━━━━━━━━━━━━━━━━━\n';
             msg += '*Sent from Event Setup Tracker*';
 
-            // Collect all unique team members from today's events
-            var allMembers = getTeamMembers();
-            var teamMap = {};
-            dayEvents.forEach(function(w) {
-                if (w.team) {
-                    var names = w.team.split(',').map(function(n) { return n.trim(); });
-                    names.forEach(function(name) {
-                        if (!name || teamMap[name]) return;
-                        var member = allMembers.find(function(m) { return m.name === name; });
-                        if (member) {
-                            teamMap[name] = { name: member.name, number: member.number, category: member.category };
-                        } else {
-                            teamMap[name] = { name: name, number: null, category: '' };
-                        }
-                    });
-                }
-            });
-            var teamList = Object.values(teamMap);
+            // Simple modal with just Send + Copy — no employee dialogue
+            showDayWorklistModal(msg);
+        }
 
-            // Open the team send modal
-            openTeamSendModal(msg, teamList);
+        function showDayWorklistModal(msg) {
+            var existing = document.getElementById('dayWorklistModal');
+            if (existing) existing.remove();
+
+            var encodedMsg = encodeURIComponent(msg);
+
+            var html = '<div id="dayWorklistModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:30000;display:flex;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)this.remove()">';
+            html += '<div style="background:var(--card-bg);border-radius:15px;padding:25px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">';
+
+            html += '<h3 style="font-family:\'Bebas Neue\',cursive;font-size:1.4rem;color:var(--primary);letter-spacing:1px;margin-bottom:12px;">DAILY WORKLIST</h3>';
+
+            // Message preview
+            html += '<div style="margin-bottom:16px;background:var(--light);border-radius:8px;padding:12px;border:1px solid var(--border-color);max-height:200px;overflow-y:auto;">';
+            html += '<div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;">Message Preview</div>';
+            html += '<div style="font-size:0.78rem;color:var(--text-primary);white-space:pre-wrap;font-family:monospace;">' + escapeHtml(msg) + '</div>';
+            html += '</div>';
+
+            // Send via WhatsApp button
+            html += '<a href="https://wa.me/?text=' + encodedMsg + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#25D366;color:white;border:none;padding:14px;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none;cursor:pointer;margin-bottom:10px;font-family:\'Work Sans\',sans-serif;">Send via WhatsApp</a>';
+
+            // Copy Message button
+            html += '<button onclick="copyDayWorklistMsg()" style="width:100%;background:var(--secondary);color:var(--dark);border:none;padding:12px;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;margin-bottom:10px;font-family:\'Work Sans\',sans-serif;">Copy Message</button>';
+
+            // Close button
+            html += '<button onclick="document.getElementById(\'dayWorklistModal\').remove()" style="width:100%;background:#555;color:white;border:none;padding:10px;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:\'Work Sans\',sans-serif;">Close</button>';
+
+            html += '</div></div>';
+            document.body.insertAdjacentHTML('beforeend', html);
+
+            // Store message for copy
+            window._dayWorklistMsg = msg;
+        }
+
+        function copyDayWorklistMsg() {
+            var msg = window._dayWorklistMsg;
+            if (!msg) { showToast('No message to copy', 'warning'); return; }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(msg).then(function() {
+                    showToast('Worklist copied to clipboard!', 'success');
+                }).catch(function() {
+                    fallbackCopyText(msg);
+                });
+            } else {
+                fallbackCopyText(msg);
+            }
+        }
+
+        function fallbackCopyText(text) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast('Copied to clipboard!', 'success');
+            } catch(e) {
+                showToast('Failed to copy', 'error');
+            }
+            document.body.removeChild(ta);
         }
 
         function askBossWhatsApp(id) {
