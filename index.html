@@ -14,20 +14,14 @@
     <meta name="application-name" content="Event Tracker">
 
     <!-- PWA: Manifest (inline data URI — no separate file needed) -->
-    <script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2F23450835-015f-453e-a47a-e4265a96ca1f%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="manifest" id="pwa-manifest">
+    <script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2F49939ba6-ec4b-4454-92cb-14aa7814d910%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="manifest" id="pwa-manifest">
 
     <!-- PWA: Apple Touch Icon (generated inline SVG → PNG via canvas) -->
     <link rel="apple-touch-icon" id="apple-touch-icon">
     <link rel="icon" type="image/png" id="pwa-icon">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Libraries for Beautiful Excel and PDF Exports (deferred = page renders FIRST, then libs load) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+    <!-- Heavy export libraries are LAZY LOADED on demand (not loaded at startup = instant page load) -->
     
     <style>
         * {
@@ -2109,6 +2103,60 @@ function doPost(e) {
     </div>
 
     <script>
+        // ==================== LAZY LOADER FOR HEAVY EXPORT LIBS ====================
+        // Instead of loading 2.5MB+ of libs at startup, we load them ONLY when needed
+        var _libPromises = {};
+        function loadLibs(which) {
+            var libs = [];
+            if (which === 'excel') {
+                libs = [
+                    { id: 'exceljs', url: 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js' },
+                    { id: 'fileSaver', url: 'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js' }
+                ];
+            } else if (which === 'pdf') {
+                libs = [
+                    { id: 'jspdf', url: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js' },
+                    { id: 'jspdfAuto', url: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js' }
+                ];
+            } else if (which === 'xlsx') {
+                libs = [
+                    { id: 'xlsx', url: 'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js' }
+                ];
+            } else if (which === 'docx') {
+                libs = [
+                    { id: 'docx', url: 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js' },
+                    { id: 'fileSaver', url: 'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js' }
+                ];
+            } else if (which === 'all') {
+                libs = [
+                    { id: 'xlsx', url: 'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js' },
+                    { id: 'exceljs', url: 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js' },
+                    { id: 'jspdf', url: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js' },
+                    { id: 'jspdfAuto', url: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js' },
+                    { id: 'fileSaver', url: 'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js' },
+                    { id: 'docx', url: 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js' }
+                ];
+            }
+
+            var promises = libs.map(function(lib) {
+                if (_libPromises[lib.id]) return _libPromises[lib.id];
+                // Check if already loaded
+                var existing = document.querySelector('script[src="' + lib.url + '"]');
+                if (existing) { _libPromises[lib.id] = Promise.resolve(); return _libPromises[lib.id]; }
+
+                _libPromises[lib.id] = new Promise(function(resolve, reject) {
+                    var s = document.createElement('script');
+                    s.src = lib.url;
+                    s.onload = resolve;
+                    s.onerror = function() { reject(new Error('Failed to load ' + lib.url)); };
+                    document.head.appendChild(s);
+                });
+                return _libPromises[lib.id];
+            });
+
+            return Promise.all(promises);
+        }
+
         let sheetUrl = localStorage.getItem('sheetUrl') || '';
         let works = [];
         let currentFilter = 'all';
@@ -4327,9 +4375,9 @@ function doPost(e) {
             var rangeLabel = getExportRangeLabel();
 
             if (type === 'excel') {
-                doExportExcel(exportWorks, rangeLabel);
+                loadLibs('excel').then(function() { doExportExcel(exportWorks, rangeLabel); });
             } else {
-                doExportPDF(exportWorks, rangeLabel);
+                loadLibs('pdf').then(function() { doExportPDF(exportWorks, rangeLabel); });
             }
             closeExportModal();
         }
@@ -4680,12 +4728,14 @@ function doPost(e) {
         function importExcelData(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const importedRows = XLSX.utils.sheet_to_json(firstSheet, {raw: false});
+            showToast('Loading Excel library...', 'warning');
+            loadLibs('xlsx').then(function() {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const importedRows = XLSX.utils.sheet_to_json(firstSheet, {raw: false});
                 
                 if (importedRows.length === 0) { showToast('No data found in Excel', 'error'); return; }
                 if (!confirm('Found ' + importedRows.length + ' rows. Import them?')) return;
@@ -4718,6 +4768,7 @@ function doPost(e) {
                 showToast('Imported ' + successCount + ' of ' + importedRows.length + ' events!', 'success');
             };
             reader.readAsArrayBuffer(file);
+            }); // end loadLibs
             event.target.value = '';
         }
 
@@ -5859,6 +5910,8 @@ function doPost(e) {
         }
 
         function exportCostSheetPDF() {
+            showToast('Loading PDF library...', 'warning');
+            loadLibs('pdf').then(function() {
             var d = getCsExportData();
             if (!d.work) return;
             var work = d.work, t = d.t, quoted = d.quoted, diff = d.diff;
@@ -6061,10 +6114,13 @@ function doPost(e) {
             var fileName = 'CostSheet_' + (work.client || 'Event').replace(/\s+/g, '_') + '_' + (work.date || new Date().toISOString().split('T')[0]) + '.pdf';
             doc.save(fileName);
             showToast('Cost Sheet PDF exported!', 'success');
+            }); // end loadLibs
         }
 
         // ─── EXCEL EXPORT ─────────────────────────────────────────
         async function exportCostSheetExcel() {
+            showToast('Loading Excel library...', 'warning');
+            await loadLibs('excel');
             var d = getCsExportData();
             if (!d.work) return;
             var work = d.work, t = d.t, quoted = d.quoted, diff = d.diff;
@@ -6528,6 +6584,8 @@ function doPost(e) {
         function exportQuotationPDF() {
             if (!selectedCompany) { showToast('Select a company first', 'warning'); return; }
             if (quotationItems.length === 0) { showToast('Add at least one item', 'warning'); return; }
+            showToast('Loading PDF library...', 'warning');
+            loadLibs('pdf').then(function() {
 
             var work = works.find(function(w) { return w.id == quotationWorkId; });
             if (!work) return;
@@ -6704,6 +6762,7 @@ function doPost(e) {
             var fileName = 'Quotation_' + qNo.replace(/\//g, '-') + '.pdf';
             doc.save(fileName);
             showToast('Quotation PDF exported: ' + fileName, 'success');
+            }); // end loadLibs
         }
 
         function numberToWordsIndian(num) {
@@ -6726,6 +6785,8 @@ function doPost(e) {
         function exportQuotationDOCX() {
             if (!selectedCompany) { showToast('Select a company first', 'warning'); return; }
             if (quotationItems.length === 0) { showToast('Add at least one item', 'warning'); return; }
+            showToast('Loading DOCX library...', 'warning');
+            loadLibs('docx').then(function() {
 
             var work = works.find(function(w) { return w.id == quotationWorkId; });
             if (!work) return;
@@ -6733,11 +6794,6 @@ function doPost(e) {
             var totals = calculateQuotationTotals();
             if (totals.subtotal <= 0) { showToast('Enter rates for items before exporting', 'warning'); return; }
 
-            // Check if docx library loaded
-            if (!window.docx || !window.docx.Document) {
-                showToast('DOCX library not loaded. Please refresh the page and try again.', 'error');
-                return;
-            }
 
             try {
                 var company = selectedCompany;
@@ -6913,6 +6969,7 @@ function doPost(e) {
                 console.error('DOCX export error:', error);
                 showToast('DOCX export failed: ' + error.message, 'error');
             }
+            }); // end loadLibs
         }
     </script>
 
