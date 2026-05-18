@@ -14,20 +14,20 @@
     <meta name="application-name" content="Event Tracker">
 
     <!-- PWA: Manifest (inline data URI — no separate file needed) -->
-    <script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2Fb5f51316-2c87-41c5-a368-06bde093f2f8%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="manifest" id="pwa-manifest">
+    <script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;type=content-script&amp;dmn=chat.z.ai&amp;url=https%3A%2F%2Fchat.z.ai%2Fapi%2Fv1%2Fstorage%2Fversions%2F23450835-015f-453e-a47a-e4265a96ca1f%2Ffile%3Fpath%3Ddownload%252Findex.html&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="e5350d986e9a4fec8cfd811ed88" src="//local.adguard.org?ts=1779095860739&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><link rel="manifest" id="pwa-manifest">
 
     <!-- PWA: Apple Touch Icon (generated inline SVG → PNG via canvas) -->
     <link rel="apple-touch-icon" id="apple-touch-icon">
     <link rel="icon" type="image/png" id="pwa-icon">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Libraries for Beautiful Excel and PDF Exports -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+    <!-- Libraries for Beautiful Excel and PDF Exports (deferred = page renders FIRST, then libs load) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
     
     <style>
         * {
