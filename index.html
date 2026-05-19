@@ -2109,7 +2109,14 @@ function doPost(e) {
     </div>
 
     <script>
-        let sheetUrl = localStorage.getItem('sheetUrl') || '';
+        let sheetUrl = localStorage.getItem('sheetUrl') || 'https://script.google.com/macros/s/AKfycbyXIUXGx9CMmq092A1jZ_rjKAtNHbgR54iDzrKRxAGrznD9zSTcRAikljREpKOowF7k/exec';
+        const SECRET_TOKEN = 'cet_9k2xmw7r'; // must match Apps Script
+        function sheetFetch(url) {
+            return fetch(url + '?token=' + SECRET_TOKEN);
+        }
+        function sheetPost(data) {
+            return fetch(sheetUrl, { method: 'POST', body: JSON.stringify(Object.assign({}, data, { token: SECRET_TOKEN })) });
+        }
         let works = [];
         let currentFilter = 'all';
         let editingId = null;
@@ -2740,7 +2747,7 @@ function doPost(e) {
             workList.innerHTML = '<div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>';
             
             try {
-                const response = await fetch(sheetUrl);
+                const response = await sheetFetch(sheetUrl);
                 const data = await response.json();
                 
                 works = data.map(row => ({
@@ -3057,10 +3064,7 @@ function doPost(e) {
             work.action = 'update';
 
             try {
-                const response = await fetch(sheetUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(work)
-                });
+                const response = await sheetPost(work);
                 const result = await response.json();
                 if (result.success) {
                     showToast('Updated ' + field + ' successfully!', 'success');
@@ -3386,10 +3390,7 @@ function doPost(e) {
             };
 
             try {
-                const response = await fetch(sheetUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(work)
-                });
+                const response = await sheetPost(work);
                 
                 const result = await response.json();
                 
@@ -3420,10 +3421,7 @@ function doPost(e) {
             updateSyncStatus('syncing');
             
             try {
-                const response = await fetch(sheetUrl, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete', id: id })
-                });
+                const response = await sheetPost({ action: 'delete', id: id });
                 const result = await response.json();
                 if (result.success) {
                     showToast('Event deleted!', 'success');
@@ -4651,7 +4649,7 @@ function doPost(e) {
                         setupStatus: '', status: 'active', action: 'add'
                     };
                     try {
-                        const response = await fetch(sheetUrl, { method: 'POST', body: JSON.stringify(newWork) });
+                        const response = await sheetPost(newWork);
                         const result = await response.json();
                         if(result.success) successCount++;
                     } catch(err) { console.error('Bulk paste failed for row', i, err); }
@@ -4709,7 +4707,7 @@ function doPost(e) {
                         setupStatus: '', status: 'active', action: 'add'
                     };
                     try {
-                        const response = await fetch(sheetUrl, { method: 'POST', body: JSON.stringify(newWork) });
+                        const response = await sheetPost(newWork);
                         const result = await response.json();
                         if(result.success) successCount++;
                     } catch(err) { console.error('Import failed for row', i, err); }
@@ -4784,7 +4782,7 @@ function doPost(e) {
                 delete updatedWork._updated;
                 updatedWork.action = 'update';
                 try {
-                    const response = await fetch(sheetUrl, { method: 'POST', body: JSON.stringify(updatedWork) });
+                    const response = await sheetPost(updatedWork);
                     const result = await response.json();
                     if(result.success) successCount++;
                 } catch(err) { console.error('Failed to update', err); }
