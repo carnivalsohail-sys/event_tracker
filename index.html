@@ -65,6 +65,97 @@
             --shadow: 0 4px 24px rgba(0,0,0,0.6);
         }
 
+
+        /* ===== PIN LOCK SCREEN ===== */
+        #pinOverlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.4s ease;
+        }
+        #pinOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #pinBox {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 24px;
+            padding: 40px 32px;
+            text-align: center;
+            width: 320px;
+            max-width: 92vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        #pinLogo { font-size: 3rem; margin-bottom: 10px; }
+        #pinTitle {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+        #pinSubtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            margin-bottom: 28px;
+        }
+        #pinDots {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.6);
+            background: transparent;
+            transition: background 0.15s, transform 0.15s;
+        }
+        .pin-dot.filled {
+            background: #FF6B00;
+            border-color: #FF6B00;
+            transform: scale(1.15);
+        }
+        #pinError {
+            color: #ff8a80;
+            font-size: 0.8rem;
+            min-height: 20px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        #pinPad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .pin-key {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 1.4rem;
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            border-radius: 14px;
+            padding: 18px 0;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .pin-key:active {
+            background: rgba(255,107,0,0.6);
+            transform: scale(0.93);
+        }
+        .pin-key-empty { background: transparent; border: none; cursor: default; }
+        .pin-key-del { font-size: 1.2rem; }
+
         body {
             font-family: 'Work Sans', sans-serif;
             background: var(--bg-gradient);
@@ -1649,6 +1740,36 @@
     </style>
 </head>
 <body>
+    <!-- ===== PIN LOCK SCREEN ===== -->
+    <div id="pinOverlay">
+        <div id="pinBox">
+            <div id="pinLogo">🎪</div>
+            <div id="pinTitle">CARNIVAL ENTERTAINMENTS</div>
+            <div id="pinSubtitle">Enter PIN to continue</div>
+            <div id="pinDots">
+                <span class="pin-dot" id="dot0"></span>
+                <span class="pin-dot" id="dot1"></span>
+                <span class="pin-dot" id="dot2"></span>
+                <span class="pin-dot" id="dot3"></span>
+            </div>
+            <div id="pinError"></div>
+            <div id="pinPad">
+                <button class="pin-key" onclick="pinPress('1')">1</button>
+                <button class="pin-key" onclick="pinPress('2')">2</button>
+                <button class="pin-key" onclick="pinPress('3')">3</button>
+                <button class="pin-key" onclick="pinPress('4')">4</button>
+                <button class="pin-key" onclick="pinPress('5')">5</button>
+                <button class="pin-key" onclick="pinPress('6')">6</button>
+                <button class="pin-key" onclick="pinPress('7')">7</button>
+                <button class="pin-key" onclick="pinPress('8')">8</button>
+                <button class="pin-key" onclick="pinPress('9')">9</button>
+                <button class="pin-key pin-key-empty"></button>
+                <button class="pin-key" onclick="pinPress('0')">0</button>
+                <button class="pin-key pin-key-del" onclick="pinDel()">⌫</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -2559,8 +2680,74 @@ function doPost(e) {
             if (modal) modal.remove();
         }
 
+        // ==================== PIN LOCK ====================
+        var PIN_CORRECT = '7865';
+        var pinEntered = '';
+
+        function pinUnlocked() {
+            return localStorage.getItem('et_pin_unlocked') === 'yes';
+        }
+
+        function unlockApp() {
+            localStorage.setItem('et_pin_unlocked', 'yes');
+            var overlay = document.getElementById('pinOverlay');
+            overlay.classList.add('hidden');
+            setTimeout(function() { overlay.style.display = 'none'; }, 400);
+        }
+
+        function pinPress(digit) {
+            if (pinEntered.length >= 4) return;
+            pinEntered += digit;
+            updatePinDots();
+            if (pinEntered.length === 4) {
+                setTimeout(checkPin, 120);
+            }
+        }
+
+        function pinDel() {
+            pinEntered = pinEntered.slice(0, -1);
+            updatePinDots();
+            document.getElementById('pinError').textContent = '';
+        }
+
+        function updatePinDots() {
+            for (var i = 0; i < 4; i++) {
+                var dot = document.getElementById('dot' + i);
+                dot.classList.toggle('filled', i < pinEntered.length);
+            }
+        }
+
+        function checkPin() {
+            if (pinEntered === PIN_CORRECT) {
+                unlockApp();
+            } else {
+                document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+                // Shake animation
+                var box = document.getElementById('pinBox');
+                box.style.transform = 'translateX(-10px)';
+                setTimeout(function() { box.style.transform = 'translateX(10px)'; }, 80);
+                setTimeout(function() { box.style.transform = 'translateX(-6px)'; }, 160);
+                setTimeout(function() { box.style.transform = 'translateX(0)'; }, 240);
+                pinEntered = '';
+                updatePinDots();
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('pinOverlay').style.display === 'none') return;
+            if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+            if (e.key === 'Backspace') pinDel();
+        });
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', function() {
+            // ---- PIN CHECK ----
+            if (pinUnlocked()) {
+                document.getElementById('pinOverlay').style.display = 'none';
+            }
+            // else overlay stays visible — user must enter PIN
+
             // Load theme
             const savedTheme = localStorage.getItem('event_tracker_theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
